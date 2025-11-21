@@ -1,6 +1,4 @@
 const Event= require('../models/eventModel');
-
-
 //event controller 
 
 const eventInfo = async(req,res) => {
@@ -40,4 +38,34 @@ console.log("event success");
     }
 };
 
-module.exports = {eventInfo};
+// get event by id:
+
+const getEvent = async(req,res,next) =>{
+
+    try {
+
+        const id = req.params.id;
+        console.log("id of the event",id);
+
+
+        const event =await Event.findOne({eventId:id});
+console.log("event for the specific id: ",event);
+ if(!event){
+
+            return res.status(400).json({
+
+                message:"No such id exist!"
+            });
+        }
+        res.status(200).json(event);
+
+       
+        
+    } catch (error) {
+
+        next(error);
+        
+    }
+}
+
+module.exports = {eventInfo,getEvent};
