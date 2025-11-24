@@ -8,6 +8,9 @@ const eventSchema = new mongoose.Schema({
     location:{type:String,require:true},
     players :[{    type:mongoose.Schema.Types.ObjectId,
     ref:'Player'
+    }],
+    teams :[{    type:mongoose.Schema.Types.ObjectId,
+    ref:'Team'
     }]
 });
 

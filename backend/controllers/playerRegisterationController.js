@@ -10,14 +10,23 @@ const playerInfo = async(req,res) => {
 
 
         const {playerId,firstName,lastName,graduationYear,primaryPosition,guardianEmail,password } = req.body;
+        const existing = await Player.findOne({ guardianEmail });
 
 
         if(!playerId || !firstName || !lastName || !graduationYear || !primaryPosition || !guardianEmail || !password){
 
             return res.status(400).json({message:"Please fill all th required fields!"});
         }
+        if (password.length < 6) {
+  return res.status(400).json({ message: "Password must be at least 6 characters" });
+}
 
-        
+        if (isNaN(graduationYear) || graduationYear < 1900 || graduationYear > 2100) {
+  return res.status(400).json({ message: "Invalid graduation year" });
+}
+
+if (existing) return res.status(400).json({ message: "Email already registered" });
+
 const activeEvent = await Event.findOne({}).sort({ date: -1 });
 
       if (!activeEvent) {
@@ -65,6 +74,8 @@ const playerLogin = async (req,res,next) => {
             });
         }
 
+
+
         const player =await Player.findOne({guardianEmail});
 
 
@@ -76,9 +87,14 @@ const playerLogin = async (req,res,next) => {
                 token:generateToken(player.id),
             })
         }
-        
+        else{
+            res.status(400).json({
+                message:"Invalid email or password"
+            });
+        }
     } catch (error) {
         
+
         next(error);
     }
 }
@@ -96,9 +112,9 @@ const allPlayers = async (req,res,next) =>
         );
         
     } catch (error) {
-        
+         
         console.log(error.message);
-        
+        next(error);
     }
 }
 
@@ -115,16 +131,16 @@ const singlePlayer = async (req,res,next) =>{
 
         if(!player){
 
-            res.status(400).json({
+          return res.status(400).json({
                 message:"Sorry! invalid id"
             });
         }
 
-res.status(201).json(
-player);
+            res.status(201).json(player);
         
     } catch (error) {
         console.log(error.message);
+        next(error);
     }
 }
 
@@ -137,18 +153,16 @@ try {
 const playerId = req.params.id;
         const player = await Player.findOne({playerId});
 
-        const {firstName,lastName,graduationYear,primaryPosition,guardianEmail,password} = req.body;
+
+          const {firstName,lastName,graduationYear,primaryPosition,guardianEmail} = req.body;
 
         console.log(playerId);
-
         if(!player){
-
-          return  res.status(400).json({
-            message : "no such player"
-          })
-        };
-
-        if(player){
+            return res.status(404).json({
+                message:"No player with this id"
+            });
+        }
+        else{
             
 
                 player.firstName=firstName;
@@ -166,6 +180,7 @@ res.json(updatedPlayer);
 } catch (error) {
 
     console.log(error.message);
+    next(error);
     
 }
 }
@@ -183,15 +198,15 @@ const delPlayer = async (req,res,next) => {
 
     const player =await Player.findOne({playerId});
 
-        console.log("palyer of the player to be deleted",player);
-
-
-         if(!player){
-
+    if(!player){
         return res.status(404).json({
-                message:"No player with this id"
-            });
-        }
+            message:"No player with this id"
+        });
+    }   
+
+
+
+       
         await player.deleteOne();       
 
         res.status(201).json({
@@ -205,6 +220,7 @@ const delPlayer = async (req,res,next) => {
     } catch (error) {
 
         console.log(error.message);
+        next(error);
         
     }
 }

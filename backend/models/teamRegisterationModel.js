@@ -4,7 +4,11 @@ const teamSchema = new mongoose.Schema({
 
     teamName:{type: String,require:true},
     coachName:{type: String,require:true},
+ events :[{
 
+    type:mongoose.Schema.Types.ObjectId,
+    ref:'eventModel'
+   }],
     ageGroup:{type: String,require:true},
     state:{type:String,require:true},
 
