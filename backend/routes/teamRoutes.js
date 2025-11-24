@@ -1,7 +1,11 @@
 const express = require('express');
-const {teamInfo} = require('../controllers/teamRegisterationController');
+const {teamInfo,teamLogin} = require('../controllers/teamRegisterationController');
 const router = express.Router();
 
-router.route('/team').post(teamInfo);
+router.route('/registeration').post(teamInfo);
+router.route('/login').post(teamInfo);
+router.route('/').get(teamInfo);
+
+
 
 module.exports =router;

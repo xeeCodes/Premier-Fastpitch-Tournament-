@@ -5,7 +5,10 @@ const eventSchema = new mongoose.Schema({
     eventId:{type: Number,require:true,unique:true},
     name:{type: String,require:true},
     date:{type: Date,require:true},
-    location:{type:String,require:true}
+    location:{type:String,require:true},
+    players :[{    type:mongoose.Schema.Types.ObjectId,
+    ref:'Player'
+    }]
 });
 
 const eventModel = mongoose.model('Event',eventSchema);

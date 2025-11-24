@@ -1,4 +1,5 @@
 const Event= require('../models/eventModel');
+const Player = require('../models/playerRegisterationModel');
 //event controller 
 
 const eventInfo = async(req,res) => {
@@ -19,6 +20,7 @@ const eventInfo = async(req,res) => {
       
 
         const newEvent = await Event.create({eventId,name,date,location});
+        
 
         res.json(newEvent);
         console.log("hello! Iam from event controller");
@@ -67,5 +69,28 @@ console.log("event for the specific id: ",event);
         
     }
 }
+// eventh having players
 
-module.exports = {eventInfo,getEvent};
+const playerEvent = async(req,res,next) => {
+    try {
+
+        const id = req.params.id;
+
+        const event = await Event.findOne({eventId:id}).populate("players");
+
+        if(!event){
+
+            res.status(400).json({
+                message:"no such event"
+            })
+        }
+        
+        res.status(200).json({event});
+    } catch (error) {
+
+        next(error);
+        
+    }
+}
+
+module.exports = {eventInfo,getEvent,playerEvent};

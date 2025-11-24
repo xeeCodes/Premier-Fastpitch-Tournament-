@@ -19,8 +19,8 @@ app.get('/',(req,res) => {
 })
 
 app.use('/api/event',eventRoutes);
-app.use('/api/registration',playerRoutes);
-app.use('/api/registration',teamRoutes);
+app.use('/api/player',playerRoutes);
+app.use('/api/team',teamRoutes);
 
 app.use(ErrorHandler);
 

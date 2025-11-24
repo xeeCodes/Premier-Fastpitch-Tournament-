@@ -11,10 +11,10 @@ const teamInfo = async(req,res,next) => {
 
         console.log("helllo i am from team controller.");
 
-        const {name,coachName,ageGroup,state,coachEmail} = req.body;
+        const {name,coachName,ageGroup,state,coachEmail,password} = req.body;
 
 
-        if(!name || !coachName || !ageGroup || !state || !coachEmail){
+        if(!name || !coachName || !ageGroup || !state || !coachEmail || !password){
 
             return res.status(400).json({message:"Please fill all the required fields!"});
         }
@@ -26,7 +26,7 @@ return res.status(400).json({message:"PLease enter valid email."});
 
       
 
-        const newTeam = await Team.create({name,coachName,ageGroup,state,coachEmail});
+        const newTeam = await Team.create({name,coachName,ageGroup,state,coachEmail,password});
 
         res.json(newTeam);
 console.log("Team success");
@@ -47,4 +47,40 @@ console.log("Team success");
     }
 };
 
-module.exports = {teamInfo};
+
+// login for team
+
+const teamLogin = async (req,res,next) => {
+
+    try {
+
+        const {coachEmail,password} = req.body;
+
+        if(!coachEmail || !password){
+
+            return res.status(400).json({
+                message:"Please fill in the require fields"
+            });
+        }
+
+        const team =await Team.findOne({coachEmail});
+
+
+        if(team){
+
+            res.status(201).json({
+                coachEmail,
+                password,
+                token:generateToken(team.id),
+            })
+        }
+        
+    } catch (error) {
+        
+        next(error);
+    }
+}
+
+
+
+module.exports = {teamInfo,teamLogin};
