@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const teamSchema = new mongoose.Schema({
 
+    teamId:{type:Number,require:true,unique:true},
     teamName:{type: String,require:true},
     coachName:{type: String,require:true},
  events :[{
@@ -9,13 +10,16 @@ const teamSchema = new mongoose.Schema({
     type:mongoose.Schema.Types.ObjectId,
     ref:'eventModel'
    }],
+
+   players:[{type:mongoose.Schema.Types.ObjectId,
+    ref:"Player"
+   }],
     ageGroup:{type: String,require:true},
     state:{type:String,require:true},
 
     coachEmail:{ type: String,
     required: true,
     unique: true, 
-    // match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
 },
 password:{
     type:String,

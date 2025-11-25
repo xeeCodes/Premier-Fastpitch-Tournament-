@@ -1,5 +1,6 @@
 const Team= require('../models/teamRegisterationModel');
 const Event = require('../models/eventModel');
+const Player =require("../models/playerRegisterationModel")
 const generateToken = require('../utils/jwt');
 
 
@@ -9,14 +10,23 @@ const teamInfo = async(req,res,next) => {
 
     try {
 
-        const {name,coachName,ageGroup,state,coachEmail,password} = req.body;
+        const {teamId,name,coachName,ageGroup,state,coachEmail,password,playerId} = req.body;
         const existing = await Team.findOne({ coachEmail });
 
-        if(!name || !coachName || !ageGroup || !state || !coachEmail || !password){
+        if(!teamId || !name || !coachName || !ageGroup || !state || !coachEmail || !password){
 
             return res.status(400).json({message:"Please fill all the required fields!"});
         }
+if(teamId){
 
+    const check = await Team.findOne({teamId}).select("-password-__v");
+    if(check){
+
+        return res.status(400).json({
+            message:"Id already exist"
+        });
+    }
+}
         if (password.length < 6) {
   return res.status(400).json({ message: "Password must be at least 6 characters" });
 }
@@ -30,14 +40,24 @@ if (existing) return res.status(400).json({ message: "Email already registered" 
         }
 
         const eventId = activeEvent.eventId;
+        
 
-        const newTeam = await Team.create({name,coachName,ageGroup,state,coachEmail,password});
+        const newTeam = await Team.create({teamId,name,coachName,ageGroup,state,coachEmail,password});
+
+        if(playerId){
+
+            const player = await Player.findOne({playerId}).select("-password-__v");
+            newTeam.players.push(player._id);
+            player.team.push(newTeam._id);
+            await player.save();
+        }
         const event =await Event.findOne({eventId});
 
         event.teams.push(newTeam._id);
         await event.save();
 
         newTeam.events.push(event._id);
+        await newTeam.save();
         res.json(newTeam);
         console.log("Team success");
         
@@ -71,12 +91,15 @@ const teamLogin = async (req,res,next) => {
         }
 
         const team =await Team.findOne({coachEmail});
+if (!team) {
+  return res.status(400).json({ message: "Invalid email or password" });
+}
+
 
         if(team){
 
             res.status(201).json({
-                coachEmail,
-                password,
+                team,
                 token:generateToken(team.id),
             })
         }
@@ -98,7 +121,14 @@ const allTeams = async (req,res,next) =>
 {
     try {
 
-        const teamList = await Team.find({});
+const teamList = await Team.find({}).select("-password -__v");
+
+        if (!teamList || teamList.length === 0) {
+  return res.status(200).json({
+    message: "No teams found",
+    teams: []
+  });
+}
 
         return res.status(201).json(
             teamList
@@ -117,9 +147,10 @@ const singleTeam = async (req,res,next) =>{
 
     try {
 
+
         const teamId = Number(req.params.id);
 
-        const team = await Team.findOne({teamId});
+        const team = await Team.findOne({teamId}).select("-password-__v");
 
         if(!team){
 
@@ -142,17 +173,34 @@ const updateTeam = async (req,res,next) => {
 
     try {
 
+
+        if (!req.params.id) {
+  return res.status(400).json({ message: "Team ID is required" });
+}
+
         const teamId = req.params.id;
-        const team = await Team.findOne({teamId});
-
-        const {name,coachName,ageGroup,state,coachEmail} = req.body;
-
-        if(!team){
+        const team = await Team.findOne({teamId}).select("-password-__v"); 
+         if(!team){
             return res.status(404).json({
                 message:"No team with this id"
             });
+        }       
+        const {name,coachName,ageGroup,state,coachEmail} = req.body;
+
+
+if ((name && name.length < 2) || (coachName && coachName.length < 3)) {
+      return res.status(400).json({ message: "Name is too short" });
+    }
+
+
+        if (coachEmail !== team.coachEmail) {
+        const emailExists = await Team.findOne({ coachEmail });
+        if (emailExists) {
+          return res.status(400).json({ message: "Email already exists" });
         }
-        else{
+      }
+
+
 
             team.name=name;
             team.coachName = coachName;
@@ -163,7 +211,7 @@ const updateTeam = async (req,res,next) => {
             const updatedTeam = await team.save();
             res.json(updatedTeam);
             
-        }
+        
        
     
     } catch (error) {
@@ -180,6 +228,11 @@ const delTeam = async (req,res,next) => {
 
     try {
 
+
+        if (!req.params.id) {
+  return res.status(400).json({ message: "Team ID is required" });
+}
+
         const teamId =req.params.id;
         const team =await Team.findOne({teamId});
 
@@ -192,7 +245,7 @@ const delTeam = async (req,res,next) => {
         await team.deleteOne();       
 
         res.status(201).json({
-            message: "Note Removed"
+            message: "Team Removed"
         });
 
     } catch (error) {

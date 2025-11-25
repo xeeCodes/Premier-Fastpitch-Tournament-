@@ -3,13 +3,17 @@ const bcrypt = require('bcrypt');
 
 const playerSchema = new mongoose.Schema({
 
-    playerId:{type:Number,require:true},
+    playerId:{type:Number,require:true,unique:true},
     firstName:{type: String,require:true},
     lastName:{type: String,require:true},
    events :[{
 
     type:mongoose.Schema.Types.ObjectId,
     ref:'eventModel'
+   }],
+
+   team:[{type:mongoose.Schema.Types.ObjectId,
+    ref:'Team'
    }],
     graduaionYear:{type: Number,require:true},
     primaryPosition:{type:String,require:true},

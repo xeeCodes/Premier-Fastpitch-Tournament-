@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.route('/registeration').post(playerInfo);
 router.route('/login').post(playerLogin);
-router.route('/').get(allPlayers);
+router.route('/list').get(allPlayers);
 router.route('/:id').get(singlePlayer);
 router.route('/:id').delete(delPlayer);
 

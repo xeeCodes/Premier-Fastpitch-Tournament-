@@ -1,6 +1,7 @@
 const Player= require('../models/playerRegisterationModel');
 const Event = require('../models/eventModel');
 const generateToken = require('../utils/jwt');
+const bcrypt =require('bcrypt');
 
 //event controller 
 
@@ -10,22 +11,43 @@ const playerInfo = async(req,res) => {
 
 
         const {playerId,firstName,lastName,graduationYear,primaryPosition,guardianEmail,password } = req.body;
-        const existing = await Player.findOne({ guardianEmail });
+
 
 
         if(!playerId || !firstName || !lastName || !graduationYear || !primaryPosition || !guardianEmail || !password){
 
             return res.status(400).json({message:"Please fill all th required fields!"});
         }
+                const existing = await Player.findOne({ guardianEmail });
+
+
+if(playerId){
+
+    const check = await Player.findOne({playerId}).select("-password-__v");
+    if(check){
+
+        return res.status(400).json({
+            message:"Id already exist"
+        });
+    }
+}
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(guardianEmail)) {
+  return res.status(400).json({ message: "Invalid email format" });
+}
+
         if (password.length < 6) {
   return res.status(400).json({ message: "Password must be at least 6 characters" });
 }
 
-        if (isNaN(graduationYear) || graduationYear < 1900 || graduationYear > 2100) {
+        if (!graduationYear || graduationYear < 1900 || graduationYear > 2100) {
   return res.status(400).json({ message: "Invalid graduation year" });
 }
 
 if (existing) return res.status(400).json({ message: "Email already registered" });
+
+
 
 const activeEvent = await Event.findOne({}).sort({ date: -1 });
 
@@ -37,13 +59,13 @@ const eventId = activeEvent.eventId;
 
         const newPLayer = await Player.create({playerId,firstName,lastName,graduationYear,primaryPosition,guardianEmail,password});
         const event =await Event.findOne({eventId});
-
+        newPLayer.events.push(event._id);
         event.players.push(newPLayer._id);
         await event.save();
 
         newPLayer.events.push(event._id);
+        newPLayer.save();
         res.json(newPLayer);
-console.log("Player success");
         
     } catch (error) {
 
@@ -74,16 +96,36 @@ const playerLogin = async (req,res,next) => {
             });
         }
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(guardianEmail)) {
+  return res.status(400).json({ message: "Invalid email format" });
+}
 
+            if(password){
 
-        const player =await Player.findOne({guardianEmail});
+                const user = await Player.findOne({guardianEmail});
+                if (!user) {
+    return res.status(404).json({
+        message: "User not found" 
+    });
+}
+
+                const match = await bcrypt.compare(password,user.password);
+                if(!match){
+
+                    res.status(400).json({
+                        message:"password is invalid"
+                    });
+                }
+            }
+
+        const player =await Player.findOne({guardianEmail}).select("-password-__v");
 
 
         if(player){
 
             res.status(201).json({
                 guardianEmail,
-                password,
                 token:generateToken(player.id),
             })
         }
@@ -105,10 +147,17 @@ const allPlayers = async (req,res,next) =>
 {
     try {
 
-        const teamList = await Player.find({});
+        const playerList = await Player.find({}).select("-password-__v");
+
+
+        if (!playerList || playerList.length === 0) {
+  return res.status(200).json({
+    message: "No player found",
+  });
+}
 
         return res.status(201).json(
-            teamList
+            playerList
         );
         
     } catch (error) {
@@ -125,7 +174,10 @@ const singlePlayer = async (req,res,next) =>{
 
     try {
 
+
         const playerId = Number(req.params.id);
+
+       
 
         const player = await Player.findOne({playerId});
 
@@ -146,23 +198,40 @@ const singlePlayer = async (req,res,next) =>{
 
 //updating the player
 
-const updatePlayer = async (req,res) => {
+const updatePlayer = async (req,res,next) => {
 
 try {
 
+   
+
 const playerId = req.params.id;
-        const player = await Player.findOne({playerId});
 
-
-          const {firstName,lastName,graduationYear,primaryPosition,guardianEmail} = req.body;
-
-        console.log(playerId);
-        if(!player){
+        const player = await Player.findOne({playerId}).select("-passwod-__v");
+ if(!player){
             return res.status(404).json({
                 message:"No player with this id"
             });
         }
-        else{
+
+          const {firstName,lastName,graduationYear,primaryPosition,guardianEmail} = req.body;
+
+       if ((firstName && firstName.length < 2) || (lastName && lastName.length < 3)) {
+      return res.status(400).json({ message: "Name is too short" });
+    }
+
+
+        if (guardianEmail !== player.guardianEmail) {
+        const emailExists = await Player.findOne({ guardianEmail });
+        if (emailExists) {
+          return res.status(400).json({ message: "Email already exists" });
+        }
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(guardianEmail)) {
+  return res.status(400).json({ message: "Invalid email format" });
+}
+        
             
 
                 player.firstName=firstName;
@@ -174,7 +243,7 @@ const playerId = req.params.id;
 const updatedPlayer = await player.save();
 res.json(updatedPlayer);
             
-        }
+        
        
     
 } catch (error) {
@@ -192,6 +261,10 @@ const delPlayer = async (req,res,next) => {
 
 
     try {
+
+        if (!req.params.id) {
+  return res.status(400).json({ message: "Team ID is required" });
+}
 
         const playerId =req.params.id;
        
