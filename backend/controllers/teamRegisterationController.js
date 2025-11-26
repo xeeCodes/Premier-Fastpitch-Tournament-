@@ -27,11 +27,22 @@ if(teamId){
         });
     }
 }
-        if (password.length < 6) {
+        if (!password || password.length < 6) {
   return res.status(400).json({ message: "Password must be at least 6 characters" });
 }
 if (existing) return res.status(400).json({ message: "Email already registered" });
 
+if(name.length < 3 || coachName.length < 3){
+
+    return res.status(400).json({
+        message:"First name and last name must be at least 3 characters long"
+    })
+}
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(coachEmail)) {
+  return res.status(400).json({ message: "Invalid email format" });
+}
 
         const activeEvent = await Event.findOne({}).sort({ date: -1 });
 

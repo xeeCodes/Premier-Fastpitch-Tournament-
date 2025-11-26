@@ -1,5 +1,6 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors'); 
 const connectdb= require('./config/db');
 const eventRoutes = require('./routes/eventRoute');
 const teamRoutes = require('./routes/teamRoutes');
@@ -7,10 +8,12 @@ const playerRoutes = require('./routes/playerRoutes');
 const ErrorHandler = require('./midleware/errorMidddleware')
 const app = express();
 
+app.use(cors());
 
 //configuration
 dotenv.config();
 connectdb();
+
 app.use(express.json());
 
 app.get('/',(req,res) => {

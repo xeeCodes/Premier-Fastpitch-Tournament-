@@ -14,7 +14,7 @@ const playerInfo = async(req,res) => {
 
 
 
-        if(!playerId || !firstName || !lastName || !graduationYear || !primaryPosition || !guardianEmail || !password){
+        if( !firstName || !graduationYear || !primaryPosition || !guardianEmail || !password){
 
             return res.status(400).json({message:"Please fill all th required fields!"});
         }
@@ -32,12 +32,19 @@ if(playerId){
     }
 }
 
+if(firstName.length < 3 ){
+
+    return res.status(400).json({
+        message:"First name and last name must be at least 3 characters long"
+    })
+}
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 if (!emailRegex.test(guardianEmail)) {
   return res.status(400).json({ message: "Invalid email format" });
 }
 
-        if (password.length < 6) {
+        if (!password || password.length < 6) {
   return res.status(400).json({ message: "Password must be at least 6 characters" });
 }
 
@@ -59,7 +66,7 @@ const eventId = activeEvent.eventId;
 
         const newPLayer = await Player.create({playerId,firstName,lastName,graduationYear,primaryPosition,guardianEmail,password});
         const event =await Event.findOne({eventId});
-        newPLayer.events.push(event._id);
+        
         event.players.push(newPLayer._id);
         await event.save();
 
