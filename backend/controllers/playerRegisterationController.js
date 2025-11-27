@@ -10,7 +10,7 @@ const playerInfo = async(req,res) => {
     try {
 
 
-        const {playerId,firstName,lastName,graduationYear,primaryPosition,guardianEmail,password } = req.body;
+        const {firstName,lastName,graduationYear,primaryPosition,guardianEmail,password } = req.body;
 
 
 
@@ -21,16 +21,7 @@ const playerInfo = async(req,res) => {
                 const existing = await Player.findOne({ guardianEmail });
 
 
-if(playerId){
 
-    const check = await Player.findOne({playerId}).select("-password-__v");
-    if(check){
-
-        return res.status(400).json({
-            message:"Id already exist"
-        });
-    }
-}
 
 if(firstName.length < 3 ){
 
@@ -64,7 +55,7 @@ const activeEvent = await Event.findOne({}).sort({ date: -1 });
 const eventId = activeEvent.eventId;
 
 
-        const newPLayer = await Player.create({playerId,firstName,lastName,graduationYear,primaryPosition,guardianEmail,password});
+        const newPLayer = await Player.create({firstName,lastName,graduationYear,primaryPosition,guardianEmail,password});
         const event =await Event.findOne({eventId});
         
         event.players.push(newPLayer._id);

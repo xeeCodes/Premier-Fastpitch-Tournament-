@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+
+const AutoIncrement = require('mongoose-sequence')(mongoose);
+
 const teamSchema = new mongoose.Schema({
 
     teamId:{type:Number,require:true,unique:true},
@@ -54,6 +57,7 @@ teamSchema.methods.comparePassword = async function(candidatePassword) {
         return await bcrypt.compare(candidatePassword, this.password);
     };
 
+teamSchema.plugin(AutoIncrement, { inc_field: 'teamId' });
 
 const teamModel = mongoose.model('Team',teamSchema);
 

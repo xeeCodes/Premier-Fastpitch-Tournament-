@@ -10,23 +10,17 @@ const teamInfo = async(req,res,next) => {
 
     try {
 
-        const {teamId,name,coachName,ageGroup,state,coachEmail,password,playerId} = req.body;
+        console.log("Received Body =>", req.body);
+
+
+        const {name,coachName,ageGroup,state,coachEmail,password,playerId} = req.body;
         const existing = await Team.findOne({ coachEmail });
 
-        if(!teamId || !name || !coachName || !ageGroup || !state || !coachEmail || !password){
+        if(!name || !coachName || !ageGroup || !state || !coachEmail || !password){
 
             return res.status(400).json({message:"Please fill all the required fields!"});
         }
-if(teamId){
 
-    const check = await Team.findOne({teamId}).select("-password-__v");
-    if(check){
-
-        return res.status(400).json({
-            message:"Id already exist"
-        });
-    }
-}
         if (!password || password.length < 6) {
   return res.status(400).json({ message: "Password must be at least 6 characters" });
 }
@@ -53,7 +47,7 @@ if (!emailRegex.test(coachEmail)) {
         const eventId = activeEvent.eventId;
         
 
-        const newTeam = await Team.create({teamId,name,coachName,ageGroup,state,coachEmail,password});
+        const newTeam = await Team.create({name,coachName,ageGroup,state,coachEmail,password});
 
         if(playerId){
 
